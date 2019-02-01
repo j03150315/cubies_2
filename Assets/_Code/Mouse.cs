@@ -94,10 +94,10 @@ public class Mouse : MonoBehaviour
         }
     }
 
-    void RotateGrabbed(Vector3 amount)
+    void RotateGrabbed(Vector3 xyzRot)
     {
         Vector3 rot = GrabbedCollider.transform.localRotation.eulerAngles;
-        rot += amount * RotateSpeed;
+        rot += xyzRot * RotateSpeed;
         GrabbedCollider.transform.localRotation = Quaternion.Euler(rot);
     }
 }
