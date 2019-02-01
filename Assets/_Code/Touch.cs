@@ -5,19 +5,6 @@ using OVRTouchSample;
 
 public class Touch : MonoBehaviour
 {
-    public enum Layers
-    {
-        None = 0,
-        Piece = 10,
-        Controller = 11,
-    }
-    public enum Mask
-    {
-        None = Layers.None,
-        Piece = 1 << Layers.Piece,
-        Controller = 1 << Layers.Controller,
-    }
-
     public OVRInput.Controller Controller;
     public SphereCollider Grabber;
 
@@ -44,7 +31,7 @@ public class Touch : MonoBehaviour
             if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, Controller))
             {
                 // Try grab a collider that we are touching
-                int mask = (int)Mask.Piece; // + (int)Mask.Controller;
+                int mask = (int)App.Mask.Piece; // + (int)Mask.Controller;
                 float radius = Grabber.radius * Grabber.transform.localScale.x;
                 Collider[] colliders = Physics.OverlapSphere(Grabber.transform.position, radius, mask);
                 foreach (Collider collider in colliders)
