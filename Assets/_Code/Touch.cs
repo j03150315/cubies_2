@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using OVRTouchSample;
 
-public class Touch : MonoBehaviour
+public class Touch : Controller
 {
     public OVRInput.Controller Controller;
-    public SphereCollider Grabber;
-
-    Collider GrabbedCollider;
+    public float RotateSpeed = 1f;
 
     // Start is called before the first frame update
     void Start()
@@ -29,27 +27,33 @@ public class Touch : MonoBehaviour
         {
             // And we pressed the trigger
             if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, Controller))
-            {
-                // Try grab a collider that we are touching
-                int mask = (int)App.Mask.Piece; // + (int)Mask.Controller;
-                float radius = Grabber.radius * Grabber.transform.localScale.x;
-                Collider[] colliders = Physics.OverlapSphere(Grabber.transform.position, radius, mask);
-                foreach (Collider collider in colliders)
-                {
-                    GrabbedCollider = collider;
-                    collider.transform.parent = Grabber.transform;
-                    break;
-                }
-            }
+                Grab();
         }
         else
         {
             // Have released the trigger?
             if (!OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, Controller))
             {
-                GrabbedCollider.transform.parent = null;
-                GrabbedCollider = null;
+                Release();
+            }
+            else
+            {
+                // Check for rotation
+                Vector2 stick = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, Controller);
+                RotateGrabbed(new Vector3(stick.x, stick.y, 0));
+
+                // Check for highlight
+                Piece piece = GrabbedCollider.GetComponentInParent<Piece>();
+                piece.TryHighlight();
             }
         }
     }
+
+    void RotateGrabbed(Vector3 xyzRot)
+    {
+        Vector3 rot = GrabbedCollider.transform.parent.localRotation.eulerAngles;
+        rot += xyzRot * RotateSpeed;
+        GrabbedCollider.transform.parent.localRotation = Quaternion.Euler(rot);
+    }
+
 }

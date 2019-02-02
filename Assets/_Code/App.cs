@@ -17,10 +17,17 @@ public class App : MonoBehaviour
         Controller = 1 << Layers.Controller,
     }
 
+    public static App Inst;
+
+    public Cubie CurrentCubie;
+    public float SnapDistance = 0.1f;
+    public float SnapAngle = 45f;
+    public Material HighlightMaterial;
+
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        
+        Inst = this;
     }
 
     // Update is called once per frame

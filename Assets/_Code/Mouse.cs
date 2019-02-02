@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using OVRTouchSample;
 
-public class Mouse : MonoBehaviour
+public class Mouse : Controller
 {
-    public SphereCollider Grabber;
     public float ScrollSpeed = 1f;
     public float RotateSpeed = 2f;
-    Collider GrabbedCollider;
 
     // Start is called before the first frame update
     void Start()
@@ -34,35 +32,14 @@ public class Mouse : MonoBehaviour
         {
             // And we pressed the trigger
             if (leftButtonDown)
-            {
-                // Try grab a collider that we are touching
-                int mask = (int)App.Mask.Piece; // + (int)Mask.Controller;
-                float radius = Grabber.radius * Grabber.transform.localScale.x;
-                Collider[] colliders = Physics.OverlapSphere(Grabber.transform.position, radius, mask);
-                foreach (Collider collider in colliders)
-                {
-                    GrabbedCollider = collider;
-                    collider.transform.parent.parent = Grabber.transform;
-
-                    // Turn off physics
-                    Rigidbody body = GrabbedCollider.GetComponentInParent<Rigidbody>();
-                    body.isKinematic = true;
-                    break;
-                }
-            }
+                Grab();
         }
         else
         {
             // Have released the trigger?
             if (!leftButtonDown)
             {
-                // Turn on physics
-                Rigidbody body = GrabbedCollider.GetComponentInParent<Rigidbody>();
-                body.isKinematic = false;
-
-                // Drop the object
-                GrabbedCollider.transform.parent.parent = null;
-                GrabbedCollider = null;
+                Release();
             }
             else
             {
@@ -82,6 +59,10 @@ public class Mouse : MonoBehaviour
                     RotateGrabbed(new Vector3(0, 0, scroll));
                     scroll = 0;
                 }
+
+                // Check for highlight
+                Piece piece = GrabbedCollider.GetComponentInParent<Piece>();
+                piece.TryHighlight();
             }
         }
 
