@@ -17,7 +17,7 @@ public class Mouse : Controller
     // Update is called once per frame
     void Update()
     {
-        UpdateInput();
+        //UpdateInput();
     }
 
     void UpdateInput()
