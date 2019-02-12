@@ -54,7 +54,8 @@ public class Piece : MonoBehaviour
         Vector3 offset = transform.position - Snap.position;
         Vector3 pos = anchor.position + offset;
         int layer = 1;
-        Vector3 scale = App.Inst.CurrentCubie.Pieces[0].transform.localScale;
+        Transform tx = App.Inst.CurrentCubie.Pieces[0].transform;
+        Vector3 scale = Vector3.Scale(tx.localScale, tx.parent.transform.localScale);
         Matrix4x4 m = Matrix4x4.TRS(pos, anchor.rotation, scale);
 
         Graphics.DrawMesh(Mesh, m, App.Inst.HighlightMaterial, layer);
@@ -68,6 +69,7 @@ public class Piece : MonoBehaviour
 
         transform.position = pos;
         transform.rotation = anchor.rotation;
+        transform.parent = App.Inst.CurrentCubie.transform;
 
         SetPlaced();
     }

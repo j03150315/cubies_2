@@ -22,6 +22,7 @@ public class Touch : Controller
 
     void UpdateInput()
     {
+        Vector2 stick = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, Controller);
         // If not holding something
         if (GrabbedCollider == null)
         {
@@ -39,14 +40,15 @@ public class Touch : Controller
             else
             {
                 // Check for rotation
-                Vector2 stick = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, Controller);
-                RotateGrabbed(new Vector3(stick.x, stick.y, 0));
+                //RotateGrabbed(new Vector3(stick.x, stick.y, 0));
 
                 // Check for highlight
                 Piece piece = GrabbedCollider.GetComponentInParent<Piece>();
                 piece.TryHighlight();
             }
         }
+
+        RotateCubie(new Vector3(0, stick.x, 0));
     }
 
     void RotateGrabbed(Vector3 xyzRot)
@@ -54,6 +56,14 @@ public class Touch : Controller
         Vector3 rot = GrabbedCollider.transform.parent.localRotation.eulerAngles;
         rot += xyzRot * RotateSpeed;
         GrabbedCollider.transform.parent.localRotation = Quaternion.Euler(rot);
+    }
+
+    void RotateCubie(Vector3 xyzRot)
+    {
+        Transform tx = App.Inst.CurrentCubie.transform;
+        Vector3 rot = tx.localRotation.eulerAngles;
+        rot += xyzRot * RotateSpeed;
+        tx.localRotation = Quaternion.Euler(rot);
     }
 
 }
