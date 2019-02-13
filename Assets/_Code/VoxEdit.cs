@@ -173,7 +173,7 @@ public class VoxEdit : MonoBehaviour
     //      Read as RAW Voxel data
     bool ReadMagicaVoxel()
     {
-        string path = @"C:\git\cubies_2\Assets\StreamingAssets\monu0.vox";
+        string path = @"C:\git\cubies_2\Assets\StreamingAssets\slime.vox";
         using (BinaryReader r = new BinaryReader(File.Open(path, FileMode.Open)))
         {
             // Validate TAG
@@ -300,7 +300,7 @@ public class VoxEdit : MonoBehaviour
         {
             Voxel child = TryGetVoxel(x, y, z);
             if (child != null && child.Piece == null)
-                RecursiveAttach(vp, child, chance * 0.5f);
+                RecursiveAttach(vp, child, chance * 0.75f);
         }
     }
 
@@ -345,7 +345,9 @@ public class VoxEdit : MonoBehaviour
         Vox vox = go.GetComponent<Vox>();
         Voxel firstVoxel = vp.Voxels[0];
         Vector3 pos = new Vector3(firstVoxel.X, firstVoxel.Y, firstVoxel.Z);
-        go.transform.position = pos;
+        float scale = 0.2f;
+        go.transform.position = pos * scale;
+        go.transform.localScale = new Vector3(scale, scale, scale);
 
         MeshFilter filter = go.GetComponent<MeshFilter>();
         Mesh mesh = filter.mesh;
