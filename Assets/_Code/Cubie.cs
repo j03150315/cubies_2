@@ -4,13 +4,21 @@ using UnityEngine;
 
 public class Cubie : MonoBehaviour
 {
-    public Piece[] Pieces;
+    public List<Piece> Pieces = new List<Piece>();
     public Transform Base;
 
     // Start is called before the first frame update
     void Start()
     {
-        Pieces = GetComponentsInChildren<Piece>();
+    }
+
+    public void SetupPrefabCubie()
+    {
+        Piece[] all = GetComponentsInChildren<Piece>();
+        foreach (Piece piece in all)
+        {
+            Pieces.Add(piece);
+        }
         Pieces[0].SetPlaced();
 
         Base = transform.Find("Base");

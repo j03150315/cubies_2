@@ -8,10 +8,14 @@ public class Piece : MonoBehaviour
     Transform Snap;
     Mesh Mesh;
 
+    public VoxPiece VoxPiece;
+
     // Start is called before the first frame update
     void Start()
     {
         Snap = transform.Find("Snap");
+        if (Snap == null)
+            Snap = transform;
         MeshFilter filter = GetComponentInChildren<MeshFilter>();
         Mesh = filter.mesh;
     }

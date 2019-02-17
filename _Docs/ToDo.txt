@@ -1,30 +1,28 @@
 Cubies
 
 
--= DONE =-
-
-
-Move pieces into a folder and make prefabs
-	Maybe one cubie prefab for all pieces in assembled state
-
-Create App object
-	Create ref to cubie
-	At start create array tof all pieces in the cubie prefab
-Add Placed flag to Piece
-
-Spawn one random piece placed and physics turned off
-
-Snapping
-	Check if grabbed piece is close to a placed piece
-		If so draw a highlighted version of the mesh with the PieceHilight material
-	If releasing when there is a highlight, then snap the piece into place
+-=✓ DONE ✓=-
 
 -= TODO =-
 
+Vox Models
+✓	Read vox files
+✓	Split into pieces
+✓	Build geometry
+✓	Add physics
+✓	Bring Vox Edit into main scene
+✓	Convert vox pieces into game piece
+✓	Make cubie
+✓	Base piece
+✓	Piece grab
+✓	Piece snap
+>>>	Change mouse grab to force grab
+	Change color when valid piece
+	Read texture
+	Show internal faces (use last 1 or 8 colors)
+
 VR stick rotation
-
-
-(Spawn other pieces at random places and let fall to the ground)
+Spawn other pieces at random places and let fall to the ground
 
 
 

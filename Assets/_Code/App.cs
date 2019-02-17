@@ -6,19 +6,21 @@ public class App : MonoBehaviour
 {
     public enum Layers
     {
-        None = 0,
+        Default = 0,
         Piece = 10,
         Controller = 11,
     }
     public enum Mask
     {
-        None = Layers.None,
-        Piece = 1 << Layers.Piece,
-        Controller = 1 << Layers.Controller,
+        None        = 0,
+        Default     = 1 << Layers.Default,
+        Piece       = 1 << Layers.Piece,
+        Controller  = 1 << Layers.Controller,
     }
 
     public static App Inst;
 
+    public Cubie StartCubie;
     public Cubie CurrentCubie;
     public float SnapDistance = 0.1f;
     public float SnapAngle = 45f;
@@ -33,6 +35,10 @@ public class App : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (StartCubie != null)
+        {
+            StartCubie.SetupPrefabCubie();
+            CurrentCubie = StartCubie;
+        }
     }
 }

@@ -17,7 +17,7 @@ public class Mouse : Controller
     // Update is called once per frame
     void Update()
     {
-        //UpdateInput();
+        UpdateInput();
     }
 
     void UpdateInput()
@@ -30,6 +30,11 @@ public class Mouse : Controller
         // If not holding something
         if (GrabbedCollider == null)
         {
+            // Project the sphere
+            Vector3 mousePos = Input.mousePosition;
+            Ray ray = Camera.main.ScreenPointToRay(mousePos);
+            ProjectGrabber(ray);
+
             // And we pressed the trigger
             if (leftButtonDown)
                 Grab();

@@ -7,6 +7,27 @@ public class Controller : MonoBehaviour
     public SphereCollider Grabber;
     public Collider GrabbedCollider;
 
+    public void ProjectGrabber(Ray ray)
+    {
+        RaycastHit hit;
+        int mask = (int)App.Mask.Piece + (int)App.Mask.Default;
+        if (Physics.Raycast(ray, out hit, 1000f, mask))
+        {
+            Piece piece = hit.transform.GetComponent<Piece>();
+            if (piece != null)
+                HighlightGrabber(true);
+            else
+                HighlightGrabber(false);
+
+            // Move the grabber
+            Grabber.transform.position = hit.point;
+        }
+    }
+
+    public void HighlightGrabber(bool on)
+    {
+
+    }
 
     public void Grab()
     {

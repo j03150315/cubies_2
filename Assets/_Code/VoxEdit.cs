@@ -6,7 +6,9 @@ using System.Text;
 
 public class VoxEdit : MonoBehaviour
 {
+    public bool BuilderMode;
     public Vox VoxPrefab;
+    public int MaxVoxelHeight = int.MaxValue;
     public Dictionary<int, Voxel> Voxels = new Dictionary<int, Voxel>();
     public Dictionary<int, Vox> Voxs = new Dictionary<int, Vox>();
 
@@ -31,18 +33,20 @@ public class VoxEdit : MonoBehaviour
     void Start()
     {
         //AddVox(Key(0, 0, 0));
-        ReadMagicaVoxel();
+        string name = "Tree";
+        ReadMagicaVoxel(name);
         SplitIntoPieces();
-        BuildPieces();
+        App.Inst.CurrentCubie = BuildCubie(name);
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateInput();
+        if (BuilderMode)
+            UpdateBuilderInput();
     }
 
-    void UpdateInput()
+    void UpdateBuilderInput()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -171,9 +175,9 @@ public class VoxEdit : MonoBehaviour
 
     // Read MagicaVoxel
     //      Read as RAW Voxel data
-    bool ReadMagicaVoxel()
+    bool ReadMagicaVoxel(string name)
     {
-        string path = @"C:\git\cubies_2\Assets\StreamingAssets\slime.vox";
+        string path = @"C:\git\cubies_2\Assets\StreamingAssets\" + name + @".vox";
         using (BinaryReader r = new BinaryReader(File.Open(path, FileMode.Open)))
         {
             // Validate TAG
@@ -230,6 +234,7 @@ public class VoxEdit : MonoBehaviour
                             int y = r.ReadByte();
                             int c = r.ReadByte();
                             //BuildVox(VoxPrefab, x, y, z, c);
+                            if (y < MaxVoxelHeight)
                             AddVoxel(x, y, z, c);
                         }
                         modelCount--;
@@ -237,6 +242,8 @@ public class VoxEdit : MonoBehaviour
                 }
             }
         }
+
+        Debug.LogWarning(">> Read " + Voxels.Count + " voxels");
 
         return true;
     }
@@ -274,8 +281,71 @@ public class VoxEdit : MonoBehaviour
             }
         }
 
-        Debug.LogWarning(">> Split into " + VoxPieces.Count + " pieces");
+        // Find small pieces
+        int minSize = 20;
+        List<VoxPiece> smallPieces = new List<VoxPiece>();
+        foreach(var pair in VoxPieces)
+        {
+            VoxPiece piece = pair.Value;
+            if (piece.Voxels.Count < minSize)
+                smallPieces.Add(piece);
+        }
 
+        // Remove small pieces from the list
+        foreach(VoxPiece piece in smallPieces)
+        {
+            VoxPieces.Remove(piece.Key);
+        }
+
+        // Combine small piece with existing large piece
+        foreach (VoxPiece piece in smallPieces)
+        {
+            AttachToNeigbor(piece);
+        }
+
+        Debug.LogWarning(">> Split into " + VoxPieces.Count + " pieces");
+    }
+
+    void AttachToNeigbor(VoxPiece vp)
+    {
+        foreach (Voxel v in vp.Voxels)
+        {
+            // Try find piece in each direction
+            if (AttachToNeigbor(vp, v.X - 1, v.Y, v.Z))
+                return;
+            if (AttachToNeigbor(vp, v.X + 1, v.Y, v.Z))
+                return;
+            if (AttachToNeigbor(vp, v.X, v.Y - 1, v.Z))
+                return;
+            if (AttachToNeigbor(vp, v.X, v.Y + 1, v.Z))
+                return;
+            if (AttachToNeigbor(vp, v.X, v.Y, v.Z - 1))
+                return;
+            if (AttachToNeigbor(vp, v.X, v.Y, v.Z + 1))
+                return;
+        }
+
+    }
+
+    bool AttachToNeigbor(VoxPiece piece, int x, int y, int z)
+    {
+        Voxel neighbor = TryGetVoxel(x, y, z);
+        if (neighbor != null && neighbor.Piece != piece)
+        {
+            Attach(piece, neighbor.Piece);
+            return true;
+        }
+
+        return false;
+    }
+
+    void Attach(VoxPiece piece, VoxPiece neigbor)
+    {
+        foreach(Voxel v in piece.Voxels)
+        {
+            v.Piece = neigbor;
+            neigbor.Voxels.Add(v);
+        }
     }
 
     Dictionary<int, VoxPiece> VoxPieces = new Dictionary<int, VoxPiece>();
@@ -300,7 +370,7 @@ public class VoxEdit : MonoBehaviour
         {
             Voxel child = TryGetVoxel(x, y, z);
             if (child != null && child.Piece == null)
-                RecursiveAttach(vp, child, chance * 0.75f);
+                RecursiveAttach(vp, child, chance * 0.9f);
         }
     }
 
@@ -312,10 +382,26 @@ public class VoxEdit : MonoBehaviour
         return v;
     }
 
+    Cubie BuildCubie(string name)
+    {
+        // Create a parent cubie object
+        GameObject go = new GameObject(name);
+        Cubie cubie = go.AddComponent<Cubie>();
+
+        BuildPieces(cubie);
+
+        // Set the start piece
+        Piece first = cubie.Pieces[0];
+        cubie.Base = first.transform;
+        first.SetPlaced();
+
+        return cubie;
+    }
+
     // Build Geo per piece
     //     Just outside edges (not if neighbor on that face)
     //     Set UVs to color
-    void BuildPieces()
+    void BuildPieces(Cubie cubie)
     {
         // For each voxel in the pieces
         int max = 100000;
@@ -323,7 +409,9 @@ public class VoxEdit : MonoBehaviour
         foreach (VoxPiece vp in VoxPieces.Values)
         {
             vp.Mat = num * 17;
-            BuildPiece(vp);
+            Piece piece = BuildPiece(vp);
+            cubie.Pieces.Add(piece);
+            piece.transform.parent = cubie.transform;
             num++;
             if (num >= max)
                 break;
@@ -338,11 +426,11 @@ public class VoxEdit : MonoBehaviour
     List<Vector2> UVs = new List<Vector2>();
     List<int>     Indices = new List<int>();
     int Vert = 0;
-    Vox BuildPiece(VoxPiece vp)
+    Piece BuildPiece(VoxPiece vp)
     {
         GameObject go = Instantiate(VoxPrefab.gameObject);
         go.SetActive(true);
-        Vox vox = go.GetComponent<Vox>();
+        Piece piece = go.GetComponent<Piece>();
         Voxel firstVoxel = vp.Voxels[0];
         Vector3 pos = new Vector3(firstVoxel.X, firstVoxel.Y, firstVoxel.Z);
         float scale = 0.2f;
@@ -351,6 +439,10 @@ public class VoxEdit : MonoBehaviour
 
         MeshFilter filter = go.GetComponent<MeshFilter>();
         Mesh mesh = filter.mesh;
+
+        // Set the texture
+        Renderer rend = go.GetComponent<Renderer>();
+        //rend.material.mainTexture = texture;
 
         Verts.Clear();
         Norms.Clear();
@@ -378,7 +470,29 @@ public class VoxEdit : MonoBehaviour
         mesh.SetUVs(0, UVs);
         mesh.SetIndices(Indices.ToArray(), MeshTopology.Triangles, 0);
 
-        return vox;
+        // Rebuild the physics mesh
+        MeshCollider col = go.GetComponent<MeshCollider>();
+        col.sharedMesh = mesh;
+
+        Rigidbody body = piece.GetComponent<Rigidbody>();
+        body.isKinematic = true;
+
+        Explode(piece);
+
+        return piece;
+    }
+
+    void Explode(Piece piece)
+    {
+        // Apply some force to move it apart
+        Rigidbody body = piece.GetComponent<Rigidbody>();
+        body.isKinematic = false;
+        float maxF = 0.1f;
+        float maxP = 0.1f;
+        Vector3 force = new Vector3(Random.Range(-maxF, maxF), Random.Range(-maxF, maxF), Random.Range(-maxF, maxF));
+        Vector3 fpos = new Vector3(Random.Range(-maxP, maxP), Random.Range(-maxP, maxP), Random.Range(-maxP, maxP));
+        body.AddForceAtPosition(force, fpos, ForceMode.Impulse);
+
     }
 
     void AddFace(VoxPiece vp, Voxel v, Vector3 pos, Vector3 n)
@@ -394,8 +508,8 @@ public class VoxEdit : MonoBehaviour
 
     void AddVoxelFace(Voxel v, Vector3 pos, Vector3 n, int mat)
     {
-        //mat = v.C;
-        float fmat = ((float)mat) / 255f;
+        float fmat = ((float)v.C) / 255f;
+        //float fmat = ((float)mat) / 255f;
         Vector2 uv = new Vector2(fmat, 0);
         //Vector2 uv = new Vector2(mat, mat);
         // x,y,z is the center of the voxel
