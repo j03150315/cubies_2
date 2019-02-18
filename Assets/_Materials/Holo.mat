@@ -59,7 +59,7 @@ Material:
     - _BarHeight: 1
     - _BumpScale: 1
     - _CenterFade: 1.72
-    - _CenterIntensity: 0.89
+    - _CenterIntensity: 1.32
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0

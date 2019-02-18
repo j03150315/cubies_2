@@ -7,12 +7,8 @@ public class Mouse : Controller
 {
     public float ScrollSpeed = 1f;
     public float RotateSpeed = 2f;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public float GrabDistance = 2f;
+    public float GrabSpeed = 1f;
 
     // Update is called once per frame
     void Update()
@@ -48,6 +44,19 @@ public class Mouse : Controller
             }
             else
             {
+                // Pull object closer
+                Transform gtx = Grabber.transform;
+                float scale = gtx.localScale.z;
+                //Vector3 vdist = Vector3.Scale(gtx.localPosition, gtx.localScale);
+                Vector3 vdist = gtx.localPosition;
+                float dist = vdist.magnitude;
+                if (dist > GrabDistance * scale)
+                {
+                    dist -= Time.deltaTime * GrabSpeed;
+                    Vector3 vdir = vdist.normalized;
+                    gtx.localPosition = vdir * dist;
+                }
+
                 // Check for rotating the object
                 if (Input.GetKey(KeyCode.LeftControl))
                 {
