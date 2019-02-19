@@ -12,6 +12,7 @@ public class Cubie : MonoBehaviour
 
     public Dictionary<int, Voxel> Voxels = new Dictionary<int, Voxel>();
     public Dictionary<int, Vox> Voxs = new Dictionary<int, Vox>();
+    public Color32[] Palette = null;
 
     public int Key(int x, int y, int z)
     {
@@ -47,7 +48,7 @@ public class Cubie : MonoBehaviour
         ReadMagicaVoxel(name);
         SplitIntoPieces();
 
-        BuildPieces();
+        BuildPieces(name);
 
         // Set the start piece
         Piece first = Pieces[0];
@@ -77,7 +78,7 @@ public class Cubie : MonoBehaviour
     //      Read as RAW Voxel data
     bool ReadMagicaVoxel(string name)
     {
-        string path = @"C:\git\cubies_2\Assets\StreamingAssets\" + name + @".vox";
+        string path = @"Assets\StreamingAssets\" + name + @".vox";
         using (BinaryReader r = new BinaryReader(File.Open(path, FileMode.Open)))
         {
             // Validate TAG
@@ -103,7 +104,7 @@ public class Cubie : MonoBehaviour
             int sizeY = 0;
             int sizeZ = 0;
 
-            while (modelCount > 0)
+            while (modelCount > 0 || Palette == null)
             {
                 // Read chunk header
                 string cid = ReadChunkID(r);
@@ -137,6 +138,21 @@ public class Cubie : MonoBehaviour
                             AddVoxel(x, y, z, c);
                         }
                         modelCount--;
+                        break;
+                    case "RGBA":
+                        Palette = new Color32[256];
+                        for (int i = 0; i <= 254; i++)
+                        {
+                            byte R = r.ReadByte();
+                            byte G = r.ReadByte();
+                            byte B = r.ReadByte();
+                            byte A = r.ReadByte();
+                            Palette[i + 1] = new Color32(R,G,B,A);
+                        }
+                        break;
+                    default:
+                        // Skip chunks we don't care about
+                        r.ReadBytes(numBytes);
                         break;
                 }
             }
@@ -284,15 +300,31 @@ public class Cubie : MonoBehaviour
     // Build Geo per piece
     //     Just outside edges (not if neighbor on that face)
     //     Set UVs to color
-    void BuildPieces()
+    void BuildPieces(string name)
     {
+        // Read the texture
+        //string path = @"Assets\StreamingAssets\" + name + @".png";
+        //byte[] imgData = File.ReadAllBytes(path);
+        //Texture2D tex = new Texture2D(256, 1);
+        //tex.LoadImage(imgData);
+
+        byte[] imgData = new byte[4 * 256];
+        Texture2D tex = new Texture2D(256, 1);
+        tex.SetPixels32(Palette);
+        tex.Apply();
+
+        // Create a new material
+        Renderer prefabRend = App.Inst.VoxPrefab.GetComponentInChildren<Renderer>();
+        Material mat = new Material(prefabRend.sharedMaterial);
+        mat.mainTexture = tex;
+
         // For each voxel in the pieces
         int max = 100000;
         int num = 0;
         foreach (VoxPiece vp in VoxPieces.Values)
         {
             vp.Mat = num * 17;
-            Piece piece = BuildPiece(vp);
+            Piece piece = BuildPiece(vp, mat);
             Pieces.Add(piece);
             piece.transform.parent = transform;
             num++;
@@ -309,7 +341,7 @@ public class Cubie : MonoBehaviour
     List<Vector2> UVs = new List<Vector2>();
     List<int> Indices = new List<int>();
     int Vert = 0;
-    Piece BuildPiece(VoxPiece vp)
+    Piece BuildPiece(VoxPiece vp, Material mat)
     {
         GameObject go = Instantiate(App.Inst.VoxPrefab.gameObject);
         go.SetActive(true);
@@ -318,8 +350,6 @@ public class Cubie : MonoBehaviour
         float scale = 0.2f;
         Vector3 pos = new Vector3(firstVoxel.X, firstVoxel.Y, firstVoxel.Z);
         go.transform.position = pos * scale;
-        //go.transform.localScale = new Vector3(scale, scale, scale);
-        //piece.SnapPos = pos * scale;
         piece.SnapPos = go.transform.localPosition;
 
         MeshFilter filter = go.GetComponent<MeshFilter>();
@@ -327,7 +357,7 @@ public class Cubie : MonoBehaviour
 
         // Set the texture
         Renderer rend = go.GetComponent<Renderer>();
-        //rend.material.mainTexture = texture;
+        rend.material = mat;
 
         Verts.Clear();
         Norms.Clear();
@@ -367,6 +397,7 @@ public class Cubie : MonoBehaviour
 
     void ExplodePiece(Piece piece)
     {
+        piece.Placed = false;
         piece.transform.parent = null;
         // Apply some force to move it apart
         Rigidbody body = piece.GetComponent<Rigidbody>();
@@ -385,15 +416,22 @@ public class Cubie : MonoBehaviour
         Voxel neighbor = TryGetVoxel(v.X + (int)n.x, v.Y + (int)n.y, v.Z + (int)n.z);
         if (neighbor == null || neighbor.Piece != vp)
         {
+            // Get the voxel color
+            int mat = v.C;
+
+            // If there is a neighbor on another piece then this is an interior piece
+            if (neighbor != null)
+                mat = 1;
+
             // Add quad for that face with color UV
-            AddVoxelFace(v, pos, scale, n, vp.Mat);
+            AddVoxelFace(v, pos, scale, n, mat);
         }
     }
 
     void AddVoxelFace(Voxel v, Vector3 pos, float scale, Vector3 n, int mat)
     {
         // Set the color of the voxel by adjusting the uv
-        float fmat = ((float)v.C) / 255f;
+        float fmat = ((float)mat) / 255f;
         Vector2 uv = new Vector2(fmat, 0);
         // x,y,z is the center of the voxel
         float r = 0.5f;

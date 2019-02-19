@@ -5,8 +5,8 @@
 Vox Models
 ✓	Change mouse grab to force grab
 ✓	Change grabber color when valid piece
-	Read texture
-	Show internal faces (use last 1 or 8 colors)
+✓	Read texture
+✓	Show internal faces (use last 1 or 8 colors)
 
 VR stick rotation
 Spawn other pieces at random places and let fall to the ground
