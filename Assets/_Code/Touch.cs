@@ -7,11 +7,13 @@ public class Touch : Controller
 {
     public OVRInput.Controller Controller;
     public float RotateSpeed = 1f;
+    public bool Teleporting = false;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        
+        base.Init();
+        UnityEngine.XR.XRSettings.enabled = true;
     }
 
     // Update is called once per frame
@@ -26,19 +28,26 @@ public class Touch : Controller
         // If not holding something
         if (GrabbedCollider == null)
         {
+            // Project the sphere
+            Ray ray = new Ray(transform.position, transform.forward);
+            ProjectGrabber(ray);
+
             // And we pressed the trigger
-            if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, Controller))
+            if (OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, Controller))
                 Grab();
         }
         else
         {
             // Have released the trigger?
-            if (!OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, Controller))
+            if (!OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, Controller))
             {
                 Release();
             }
             else
             {
+                // Pull object closer
+                PullGrabbedObject();
+
                 // Check for rotation
                 //RotateGrabbed(new Vector3(stick.x, stick.y, 0));
 
@@ -48,7 +57,22 @@ public class Touch : Controller
             }
         }
 
-        RotateCubie(new Vector3(0, stick.x, 0));
+        // -------- MOVEMENT -----------
+        if (OVRInput.Get(OVRInput.Button.One, Controller))
+        {
+            if (!Teleporting)
+            {
+                Vector3 dest = Grabber.transform.position;
+                Teleport(dest);
+                Teleporting = true;
+            }
+        }
+        else
+        {
+            Teleporting = false;
+        }
+
+        //RotateCubie(new Vector3(0, stick.x, 0));
     }
 
     void RotateGrabbed(Vector3 xyzRot)

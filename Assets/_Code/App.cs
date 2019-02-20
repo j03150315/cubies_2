@@ -26,6 +26,8 @@ public class App : MonoBehaviour
     public Vox VoxPrefab;
     public float SnapDistance = 0.1f;
     public float SnapAngle = 45f;
+    public float CubieScale = 0.1f;
+    public int MinPieceVoxels = 10;
     public Material HighlightMaterial;
 
     // Start is called before the first frame update

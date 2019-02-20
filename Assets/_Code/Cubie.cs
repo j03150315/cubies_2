@@ -197,7 +197,7 @@ public class Cubie : MonoBehaviour
         }
 
         // Find small pieces
-        int minSize = 20;
+        int minSize = App.Inst.MinPieceVoxels;
         List<VoxPiece> smallPieces = new List<VoxPiece>();
         foreach (var pair in VoxPieces)
         {
@@ -348,7 +348,7 @@ public class Cubie : MonoBehaviour
         go.SetActive(true);
         Piece piece = go.GetComponent<Piece>();
         Voxel firstVoxel = vp.Voxels[0];
-        float scale = 0.2f;
+        float scale = App.Inst.CubieScale;
         Vector3 pos = new Vector3(firstVoxel.X, firstVoxel.Y, firstVoxel.Z);
         go.transform.position = pos * scale;
         piece.SnapPos = go.transform.localPosition;

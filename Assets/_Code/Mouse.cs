@@ -7,8 +7,12 @@ public class Mouse : Controller
 {
     public float ScrollSpeed = 1f;
     public float RotateSpeed = 2f;
-    public float GrabDistance = 2f;
-    public float GrabSpeed = 1f;
+
+    private void Start()
+    {
+        base.Init();
+        UnityEngine.XR.XRSettings.enabled = false;    
+    }
 
     // Update is called once per frame
     void Update()
@@ -45,17 +49,7 @@ public class Mouse : Controller
             else
             {
                 // Pull object closer
-                Transform gtx = Grabber.transform;
-                float scale = gtx.localScale.z;
-                //Vector3 vdist = Vector3.Scale(gtx.localPosition, gtx.localScale);
-                Vector3 vdist = gtx.localPosition;
-                float dist = vdist.magnitude;
-                if (dist > GrabDistance * scale)
-                {
-                    dist -= Time.deltaTime * GrabSpeed;
-                    Vector3 vdir = vdist.normalized;
-                    gtx.localPosition = vdir * dist;
-                }
+                PullGrabbedObject();
 
                 // Check for rotating the object
                 if (Input.GetKey(KeyCode.LeftControl))
@@ -87,6 +81,15 @@ public class Mouse : Controller
             localPos.z += scroll * ScrollSpeed;
             Grabber.transform.localPosition = localPos;
         }
+
+        // -------- MOVEMENT -----------
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Vector3 dest = Grabber.transform.position;
+            Teleport(dest);
+//            CharacterController cc = GetComponent<CharacterController>();
+        }
+
     }
 
     void RotateGrabbed(Vector3 xyzRot)
