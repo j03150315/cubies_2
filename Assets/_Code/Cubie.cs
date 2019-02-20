@@ -338,6 +338,7 @@ public class Cubie : MonoBehaviour
     List<Vector3> Verts = new List<Vector3>();
     List<Vector3> Norms = new List<Vector3>();
     List<Vector4> Tangs = new List<Vector4>();
+    List<Color> Colors = new List<Color>();
     List<Vector2> UVs = new List<Vector2>();
     List<int> Indices = new List<int>();
     int Vert = 0;
@@ -362,6 +363,7 @@ public class Cubie : MonoBehaviour
         Verts.Clear();
         Norms.Clear();
         Tangs.Clear();
+        Colors.Clear();
         UVs.Clear();
         Indices.Clear();
         Vert = 0;
@@ -382,6 +384,7 @@ public class Cubie : MonoBehaviour
         mesh.SetVertices(Verts);
         mesh.SetNormals(Norms);
         mesh.SetTangents(Tangs);
+        mesh.SetColors(Colors);
         mesh.SetUVs(0, UVs);
         mesh.SetIndices(Indices.ToArray(), MeshTopology.Triangles, 0);
 
@@ -391,6 +394,8 @@ public class Cubie : MonoBehaviour
 
         Rigidbody body = piece.GetComponent<Rigidbody>();
         body.isKinematic = true;
+
+        BakeAppertureLighting(piece);
 
         return piece;
     }
@@ -479,6 +484,11 @@ public class Cubie : MonoBehaviour
         UVs.Add(uv);
         UVs.Add(uv);
         UVs.Add(uv);
+
+        Colors.Add(new Color(1, 0, 0, 1));
+        Colors.Add(new Color(0, 1, 0, 1));
+        Colors.Add(new Color(0, 0, 1, 1));
+        Colors.Add(new Color(1, 0, 1, 1));
 
         if (n.x + n.y + n.z < -0.1f)
         {
@@ -594,6 +604,105 @@ public class Cubie : MonoBehaviour
 
             return true;
         }
+    }
+
+    void BakeAppertureLighting(Piece piece)
+    {
+        int numVerts = Verts.Count;
+        Collider collider = piece.GetComponent<Collider>();
+
+        for (int i=0; i<numVerts; i++)
+        {
+            Vector4 ap = GetAppertureLight(collider, Verts[i], Norms[i]);
+            Colors[i] = new Color(ap.x,ap.y,ap.z,ap.w);
+        }
+
+        MeshFilter filter = piece.GetComponent<MeshFilter>();
+        Mesh mesh = filter.mesh;
+        mesh.SetColors(Colors);
+    }
+
+    Vector4 GetAppertureLight(Collider collider, Vector3 pos, Vector3 normal)
+    {
+        int numRays = 128;
+        Vector3[] rays = FibonacciSphere(numRays);
+        Ray ray = new Ray();
+        RaycastHit hit = new RaycastHit();
+        ray.origin = pos;
+        float maxDist = 10f;
+
+        float visible = 1f;
+        Vector3 bentNormal = normal * 0.0001f;
+        foreach (Vector3 raydir in rays)
+        {
+            ray.direction = raydir;
+            if (!collider.Raycast(ray, out hit, maxDist))
+            {
+                bentNormal += raydir;
+                visible += 1f;
+            }
+        }
+        bentNormal = bentNormal.normalized;
+        Vector4 apperture = new Vector4(bentNormal.x, bentNormal.y, bentNormal.z, visible / numRays); 
+        return apperture;
+    }
+
+
+    public class SpherePoint
+    {
+        float lat, lon;
+        public SpherePoint(float lat, float lon)
+        {
+            this.lat = lat;
+            this.lon = lon;
+        }
+    };
+
+    // https://www.openprocessing.org/sketch/41142
+    SpherePoint[] FibonacciSphere2(int samples = 2)
+    {
+        float phi = (Mathf.Sqrt(5) + 1) / 2 - 1; // golden ratio
+        float ga = phi * 2 * Mathf.PI;           // golden angle
+        SpherePoint[] pts = new SpherePoint[samples];
+        for (int i = 1; i <= samples; ++i)
+        {
+            float lon = ga * i;
+            lon /= 2 * Mathf.PI; lon -= Mathf.Floor(lon); lon *= 2 * Mathf.PI;
+            if (lon > Mathf.PI) lon -= 2 * Mathf.PI;
+
+            // Convert dome height (which is proportional to surface area) to latitude
+            float lat = Mathf.Asin(-1 + 2 * i / (float)samples);
+
+            pts[i] = new SpherePoint(lat, lon);
+        }
+
+        return pts;
+    }
+
+    Vector3[] FibonacciSphere(int samples = 1, bool randomize = true)
+    {
+        float rnd = 1f;
+        if (randomize)
+            rnd = Random.value * samples;
+
+        Vector3[] points = new Vector3[samples];
+        float offset = 2f / samples;
+        float increment = Mathf.PI * (3f - Mathf.Sqrt(5f));
+
+        for (int i = 0; i < samples; i++)
+        {
+            float y = ((i * offset) - 1) + (offset / 2);
+            float r = Mathf.Sqrt(1f - Mathf.Pow(y, 2));
+
+            float phi = ((i + rnd) % samples) * increment;
+
+            float x = Mathf.Cos(phi) * r;
+            float z = Mathf.Sin(phi) * r;
+
+            points[i] = new Vector3(x, y, z);
+        }
+
+        return points;
     }
     #endregion
 }

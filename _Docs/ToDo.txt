@@ -8,6 +8,22 @@ Vox Models
 ✓	Read texture
 ✓	Show internal faces (use last 1 or 8 colors)
 
+
+--- Rendering ---
+Placed vs Free piece
+Build vs in progress model
+IBL
+	HDR sky
+Vertex apperture 
+	Need vertex color shader
+	Apperture Shading
+	Baking
+		Cast rays around normal
+			Hammersly dist
+		Sum non hits to get bent normal
+
+ECS
+
 VR stick rotation
 Spawn other pieces at random places and let fall to the ground
 

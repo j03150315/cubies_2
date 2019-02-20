@@ -61,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4f1e6d263a9edee4caf2ac8d955269a8, type: 2}
+  - {fileID: 2100000, guid: 30655fbc477324a45b12f868ddacd040, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -136,3 +136,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Placed: 0
+  SnapPos: {x: 0, y: 0, z: 0}
