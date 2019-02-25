@@ -70,7 +70,7 @@ public class Cubie : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F5))
+        if (Input.GetKeyDown(KeyCode.F4))
             Explode();
     }
 
