@@ -692,7 +692,8 @@ public class Cubie : MonoBehaviour
         for (int i = 0; i < samples; i++)
         {
             float y = ((i * offset) - 1) + (offset / 2);
-            float r = Mathf.Sqrt(1f - Mathf.Pow(y, 2));
+            //float r = Mathf.Sqrt(1f - Mathf.Pow(y, 2));
+            float r = Mathf.Sqrt(1f - y*y);
 
             float phi = ((i + rnd) % samples) * increment;
 
